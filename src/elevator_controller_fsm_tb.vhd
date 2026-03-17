@@ -53,7 +53,6 @@ library ieee;
  
 entity elevator_controller_fsm_tb is
 end elevator_controller_fsm_tb;
-
 architecture test_bench of elevator_controller_fsm_tb is 
 	
 	component elevator_controller_fsm is
@@ -73,7 +72,6 @@ architecture test_bench of elevator_controller_fsm_tb is
 	
 begin
 	-- PORT MAPS ----------------------------------------
-
 	uut_inst : elevator_controller_fsm port map (
 		i_clk     => w_clk,
 		i_reset   => w_reset,
@@ -90,7 +88,6 @@ begin
 	begin
 		w_clk <= '0';
 		wait for k_clk_period/2;
-		
 		w_clk <= '1';
 		wait for k_clk_period/2;
 	end process clk_process;
@@ -100,31 +97,48 @@ begin
 	test_process : process 
 	begin
         -- i_reset into initial state (o_floor 2)
-        w_reset <= '1';  wait for k_clk_period;
+        w_reset <= '1'; wait for k_clk_period;
             assert w_floor = x"2" report "bad reset" severity failure; 
         -- clear reset
+        w_reset <= '0';
 		
 		-- active UP signal
 		w_up_down <= '1'; 
 		
 		-- go up a floor
-        w_stop <= '0';  wait for k_clk_period;
-            assert w_floor = x"3" report "bad up from floor2" severity failure;
+        w_stop <= '0'; wait for k_clk_period;
+            assert w_floor = x"3" report "bad up floor2" severity failure;
 		-- try waiting on a floor
-        w_stop <= '1';  wait for k_clk_period * 2;
-            assert w_floor = x"3" report "bad wait on floor3" severity failure;
-		--  go up again
+        w_stop <= '1'; wait for k_clk_period * 2;
+            assert w_floor = x"3" report "bad hold floor3" severity failure;
+		-- go up again
+        w_stop <= '0'; wait for k_clk_period;
+            assert w_floor = x"4" report "bad up floor3" severity failure;
 		
 		-- go back down one floor
+        w_up_down <= '0'; wait for k_clk_period;
+            assert w_floor = x"3" report "bad down floor4" severity failure;
 		
 		-- go up the rest of the way
+        w_up_down <= '1'; wait for k_clk_period;
+            assert w_floor = x"4" report "bad up to floor4" severity failure;
 		
 		-- stop at top
+        w_stop <= '1'; wait for k_clk_period * 2;
+            assert w_floor = x"4" report "bad hold top" severity failure;
+
         
         -- go all the way down DOWN (how many clock cycles should that take?)
         w_up_down <= '0'; 
+        wait for k_clk_period;
+            assert w_floor = x"3" report "bad floor" severity failure;
+        wait for k_clk_period;
+            assert w_floor = x"2" report "bad floor" severity failure;
+        wait for k_clk_period;
+            assert w_floor = x"1" report "bad floor" severity failure;
+        wait for k_clk_period;
+            assert w_floor = x"1" report "bad bottom" severity failure;
   
-		  	
 		wait; -- wait forever
 	end process;	
 	-----------------------------------------------------	
